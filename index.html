@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏃‍♂️ 트랙 인터벌 훈련 공지 생성기</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      color: #1e293b;
+      padding: 20px 14px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 540px;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 24px 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .sub-title {
+      font-size: 0.85rem;
+      color: #64748b;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .row {
+      margin-bottom: 12px;
+    }
+
+    .row:last-child {
+      margin-bottom: 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 5px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.9rem;
+      outline: none;
+      background: #ffffff;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+    }
+
+    /* 조 카드 스타일 */
+    .group-box {
+      background: #ffffff;
+      border: 1.5px solid #fed7aa;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .group-name-input {
+      font-weight: 800;
+      color: #ea580c;
+      width: 110px;
+      padding: 6px 8px;
+    }
+
+    .pace-badge {
+      background: #ffedd5;
+      color: #c2410c;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 2px 6px;
+    }
+
+    .btn-del:hover {
+      color: #ef4444;
+    }
+
+    .btn-add-group {
+      width: 100%;
+      background: #fff7ed;
+      color: #ea580c;
+      border: 1.5px dashed #fdba74;
+      padding: 11px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+
+    .btn-add-group:hover {
+      background: #ffedd5;
+    }
+
+    /* 미리보기 & 카톡 복사 */
+    .preview-box {
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 12px;
+      padding: 16px;
+      font-family: monospace, sans-serif;
+      font-size: 0.88rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .btn-copy {
+      width: 100%;
+      background: #fae100;
+      color: #371d1e;
+      border: none;
+      padding: 14px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(250, 225, 0, 0.35);
+      transition: transform 0.1s;
+    }
+
+    .btn-copy:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🏃‍♂️ 인터벌 훈련 공지 생성기</h1>
+    <div class="sub-title">트랙 질주/회복 초수를 입력하면 페이스가 자동 계산됩니다!</div>
+
+    <!-- 1. 기본 정보 입력 -->
+    <div class="card">
+      <div class="card-title">🎈 기본 정보</div>
+      <div class="grid-2 row">
+        <div>
+          <label>날짜 선택</label>
+          <input type="date" id="trainDate" onchange="updateAll()">
+        </div>
+        <div>
+          <label>시작 시간</label>
+          <input type="time" id="trainTime" value="19:30" onchange="updateAll()">
+        </div>
+      </div>
+      <div class="row">
+        <label>훈련 장소</label>
+        <input type="text" id="trainPlace" placeholder="예: 종합운동장 트랙" oninput="updateAll()">
+      </div>
+    </div>
+
+    <!-- 2. 조별 훈련 세팅 -->
+    <div class="card">
+      <div class="card-title">
+        <span>💥 조별 훈련 내용 설정</span>
+      </div>
+
+      <div id="groupContainer"></div>
+
+      <button class="btn-add-group" onclick="addGroup()">➕ 조 추가하기 (C조, D조...)</button>
+    </div>
+
+    <!-- 3. 참가 인원 작성 -->
+    <div class="card">
+      <div class="card-title">👥 참가인원 목록</div>
+      <textarea id="attendees" rows="4" placeholder="1. &#10;2. &#10;3. &#10;(또는 비워두면 카톡 공지 양식에 맞춰 빈칸이 들어갑니다)" oninput="updateAll()"></textarea>
+    </div>
+
+    <!-- 4. 미리보기 & 복사 -->
+    <label>💬 카카오톡 공지 미리보기</label>
+    <div class="preview-box" id="previewText"></div>
+
+    <button class="btn-copy" onclick="copyNotice()">💛 카카오톡 공지 복사하기</button>
+  </div>
+
+  <script>
+    // 기본 조 데이터 (A조, B조)
+    let groups = [
+      { id: 1, name: 'A조', runM: 400, runSec: 80, restM: 200, restSec: 70, sets: 20 },
+      { id: 2, name: 'B조', runM: 400, runSec: 86, restM: 200, restSec: 70, sets: 20 }
+    ];
+
+    // 오늘 날짜 기본 세팅
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    document.getElementById('trainDate').value = `${yyyy}-${mm}-${dd}`;
+
+    // 초당 속도로 1km 환산 페이스(320, 335, 550) 계산
+    function calcPace(meter, seconds) {
+      if (!meter || !seconds || meter <= 0 || seconds <= 0) return '';
+      // 1000m 완주 시 소요 시간 (초)
+      const secPerKm = Math.round((seconds / meter) * 1000);
+      const m = Math.floor(secPerKm / 60);
+      const s = secPerKm % 60;
+      return `${m}${String(s).padStart(2, '0')}`;
+    }
+
+    // 그룹 렌더링
+    function renderGroups() {
+      const container = document.getElementById('groupContainer');
+      container.innerHTML = groups.map((g, idx) => {
+        const pace = calcPace(g.runM, g.runSec);
+        return `
+          <div class="group-box">
+            <div class="group-header">
+              <input type="text" class="group-name-input" value="${g.name}" oninput="editGroup(${g.id}, 'name', this.value)">
+              <div>
+                <span class="pace-badge" id="badge-${g.id}">페이스: ${pace ? pace : '-'}</span>
+                ${groups.length > 1 ? `<button class="btn-del" onclick="delGroup(${g.id})">✕</button>` : ''}
+              </div>
+            </div>
+
+            <div class="grid-4 row">
+              <div>
+                <label>질주(m)</label>
+                <input type="number" value="${g.runM}" step="50" oninput="editGroup(${g.id}, 'runM', Number(this.value))">
+              </div>
+              <div>
+                <label>질주(초)</label>
+                <input type="number" value="${g.runSec}" oninput="editGroup(${g.id}, 'runSec', Number(this.value))">
+              </div>
+              <div>
+                <label>회복(m)</label>
+                <input type="number" value="${g.restM}" step="50" oninput="editGroup(${g.id}, 'restM', Number(this.value))">
+              </div>
+              <div>
+                <label>회복(초)</label>
+                <input type="number" value="${g.restSec}" oninput="editGroup(${g.id}, 'restSec', Number(this.value))">
+              </div>
+            </div>
+
+            <div style="width: 120px;">
+              <label>세트수(회)</label>
+              <input type="number" value="${g.sets}" oninput="editGroup(${g.id}, 'sets', Number(this.value))">
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addGroup() {
+      const nextChar = String.fromCharCode(65 + groups.length); // C, D, E...
+      groups.push({
+        id: Date.now(),
+        name: `${nextChar}조`,
+        runM: 400,
+        runSec: 92,
+        restM: 200,
+        restSec: 75,
+        sets: 20
+      });
+      renderGroups();
+      updateAll();
+    }
+
+    function delGroup(id) {
+      groups = groups.filter(g => g.id !== id);
+      renderGroups();
+      updateAll();
+    }
+
+    function editGroup(id, key, val) {
+      const g = groups.find(item => item.id === id);
+      if (g) {
+        g[key] = val;
+        // 페이스 뱃지 업데이트
+        const pace = calcPace(g.runM, g.runSec);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.innerText = `페이스: ${pace ? pace : '-'}`;
+      }
+      updateAll();
+    }
+
+    // 카톡 텍스트 조립
+    function generateNotice() {
+      const dateVal = document.getElementById('trainDate').value;
+      const timeVal = document.getElementById('trainTime').value;
+      const placeVal = document.getElementById('trainPlace').value.trim() || ' ';
+      const attendeesVal = document.getElementById('attendees').value.trim();
+
+      // 날짜 포맷 (예: 10월 14일 (화) 19시 30분)
+      let dateString = '*월 **일 (화) **시*분';
+      if (dateVal) {
+        const d = new Date(dateVal + 'T' + (timeVal || '00:00'));
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        const month = d.getMonth() + 1;
+        const day = d.getDate();
+        const dayName = days[d.getDay()];
+
+        if (timeVal) {
+          const [hour, min] = timeVal.split(':');
+          dateString = `${month}월 ${day}일 (${dayName}) ${parseInt(hour)}시 ${min}분`;
+        } else {
+          dateString = `${month}월 ${day}일 (${dayName})`;
+        }
+      }
+
+      let text = `🎈일시- ${dateString}\n`;
+      text += `🎈장소- ${placeVal}\n`;
+      text += `🎈내용-\n`;
+
+      // 조별 내용 생성
+      groups.forEach(g => {
+        const pace = calcPace(g.runM, g.runSec);
+        const paceStr = pace ? `(${pace})` : '';
+        text += `💥${g.name}-${paceStr}\n`;
+        text += `${g.runM}/${g.restM}(${g.runSec}”/${g.restSec}”)x${g.sets}\n\n`;
+      });
+
+      // 참가인원
+      text += `참가인원 :\n`;
+      if (attendeesVal) {
+        text += attendeesVal;
+      } else {
+        text += `1. \n2. \n3. `;
+      }
+
+      return text;
+    }
+
+    function updateAll() {
+      document.getElementById('previewText').innerText = generateNotice();
+    }
+
+    function copyNotice() {
+      const text = generateNotice();
+      navigator.clipboard.writeText(text).then(() => {
+        alert('카톡 공지가 복사되었습니다!\n단톡방에 바로 붙여넣기(Ctrl+V)하세요. 🔥');
+      }).catch(() => {
+        alert('복사 실패! 미리보기 내용을 직접 복사해 주세요.');
+      });
+    }
+
+    // 초기 실행
+    window.onload = function() {
+      renderGroups();
+      updateAll();
+    };
+  </script>
+</body>
+</html>
