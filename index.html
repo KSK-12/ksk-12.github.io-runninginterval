@@ -206,7 +206,7 @@
 
   <div class="container">
     <h1>🏃‍♂️ 팀미르 훈련 공지</h1>
-    <div class="sub-title">질주 초수(400m 랩 기준)를 입력하면 페이스가 자동 계산됩니다!</div>
+    <div class="sub-title">트랙 질주/회복 초수를 입력하면 페이스가 자동 계산됩니다!</div>
 
     <!-- 1. 기본 정보 입력 -->
     <div class="card">
@@ -257,13 +257,30 @@
       { id: 2, name: 'B조', runM: 400, runSec: 86, restM: 200, restSec: 70, sets: 20 }
     ];
 
-    function calcPace(runSec) {
+    /**
+     * 페이스 계산 함수:
+     * 1. 400m 미만 (100m, 200m, 300m 등):
+     *    해당 거리(m)와 초수 기준으로 1km(1,000m) 환산 페이스 계산
+     * 2. 400m 이상 (400m, 800m, 1000m 등):
+     *    인터벌 훈련 특성상 '400m 1바퀴 랩타임(초)' 기준이므로 400m 기준으로 1km 페이스 계산
+     */
+    function calcPace(runM, runSec) {
+      var m = Number(runM);
       var s = Number(runSec);
       if (!s || s <= 0) return '';
-      var secPerKm = Math.round(s * 2.5);
-      var m = Math.floor(secPerKm / 60);
-      var rem = secPerKm % 60;
-      return '' + m + (rem < 10 ? '0' + rem : rem);
+
+      var secPerKm;
+      if (m && m < 400 && m > 0) {
+        // 400m 미만: 실제 입력된 거리 기준 1km 환산 (예: 200m 40초 -> 1000m는 200초 = 3분20초)
+        secPerKm = Math.round((s / m) * 1000);
+      } else {
+        // 400m 이상: 400m 랩타임 기준 고정 (400m 80초 -> 1000m는 200초 = 3분20초)
+        secPerKm = Math.round(s * 2.5);
+      }
+
+      var minPart = Math.floor(secPerKm / 60);
+      var secPart = secPerKm % 60;
+      return '' + minPart + (secPart < 10 ? '0' + secPart : secPart);
     }
 
     function renderGroups() {
@@ -271,7 +288,7 @@
       var html = '';
       for (var i = 0; i < groups.length; i++) {
         var g = groups[i];
-        var pace = calcPace(g.runSec);
+        var pace = calcPace(g.runM, g.runSec);
         var badgeText = pace ? '페이스: ' + pace : '페이스: -';
         var delBtn = groups.length > 1 ? '<button type="button" class="btn-del" onclick="delGroup(' + g.id + ')">✕</button>' : '';
 
@@ -323,11 +340,10 @@
       for (var i = 0; i < groups.length; i++) {
         if (groups[i].id === id) {
           groups[i][key] = (key === 'name') ? val : Number(val);
-          if (key === 'runSec') {
-            var badge = document.getElementById('badge-' + id);
-            var pace = calcPace(val);
-            if (badge) badge.innerText = pace ? '페이스: ' + pace : '페이스: -';
-          }
+          // m나 초가 바뀌면 뱃지 즉시 업데이트
+          var badge = document.getElementById('badge-' + id);
+          var pace = calcPace(groups[i].runM, groups[i].runSec);
+          if (badge) badge.innerText = pace ? '페이스: ' + pace : '페이스: -';
           break;
         }
       }
@@ -368,7 +384,7 @@
 
       for (var i = 0; i < groups.length; i++) {
         var g = groups[i];
-        var pace = calcPace(g.runSec);
+        var pace = calcPace(g.runM, g.runSec);
         var paceStr = pace ? '(' + pace + ')' : '';
         text += '💥' + g.name + '-' + paceStr + '\n';
         text += g.runM + '/' + g.restM + '(' + g.runSec + '”/' + g.restSec + '”)x' + g.sets + '\n\n';
@@ -400,13 +416,11 @@
       });
     }
 
-    // 날짜/시간/장소 이벤트 리스너 등록
     document.getElementById('trainDate').addEventListener('change', updatePreview);
     document.getElementById('trainTime').addEventListener('change', updatePreview);
     document.getElementById('trainPlace').addEventListener('input', updatePreview);
     document.getElementById('attendees').addEventListener('input', updatePreview);
 
-    // 오늘 날짜 세팅 및 최초 렌더링
     (function init() {
       var now = new Date();
       var yyyy = now.getFullYear();
