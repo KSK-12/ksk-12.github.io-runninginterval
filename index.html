@@ -211,6 +211,10 @@
     <!-- 1. 기본 정보 입력 -->
     <div class="card">
       <div class="card-title">🎈 기본 정보</div>
+      <div class="row">
+        <label>공지 상단 제목</label>
+        <input type="text" id="noticeHeading" value="🏃‍♂️ 팀미르 훈련 공지">
+      </div>
       <div class="grid-2 row">
         <div>
           <label>날짜 선택</label>
@@ -267,10 +271,10 @@
 
       var secPerKm;
       if (m && m < 400 && m > 0) {
-        // 400m 미만: 실제 입력된 거리 기준 1km 환산 (예: 200m 70초 -> 1000m는 350초 = 5분50초)
+        // 400m 미만: 실제 거리 기준 1km 환산
         secPerKm = Math.round((s / m) * 1000);
       } else {
-        // 400m 이상: 400m 랩타임 기준 고정 (400m 80초 -> 1000m는 200초 = 3분20초)
+        // 400m 이상: 400m 랩타임 기준 고정 (초 * 2.5)
         secPerKm = Math.round(s * 2.5);
       }
 
@@ -364,6 +368,7 @@
     }
 
     function generateNotice() {
+      var headingVal = document.getElementById('noticeHeading').value.trim();
       var dateVal = document.getElementById('trainDate').value;
       var timeVal = document.getElementById('trainTime').value;
       var placeVal = document.getElementById('trainPlace').value.trim();
@@ -391,7 +396,8 @@
         }
       }
 
-      var text = '🎈일시- ' + dateString + '\n';
+      var text = (headingVal ? headingVal + '\n\n' : '');
+      text += '🎈일시- ' + dateString + '\n';
       text += '🎈장소- ' + (placeVal ? placeVal : '') + '\n';
       text += '🎈내용-\n';
 
@@ -429,6 +435,7 @@
       });
     }
 
+    document.getElementById('noticeHeading').addEventListener('input', updatePreview);
     document.getElementById('trainDate').addEventListener('change', updatePreview);
     document.getElementById('trainTime').addEventListener('change', updatePreview);
     document.getElementById('trainPlace').addEventListener('input', updatePreview);
