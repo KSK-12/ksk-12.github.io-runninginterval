@@ -112,7 +112,6 @@
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 12px;
-      position: relative;
     }
 
     .group-header {
@@ -145,6 +144,7 @@
       font-size: 1.1rem;
       cursor: pointer;
       padding: 2px 6px;
+      margin-left: 6px;
     }
 
     .btn-del:hover {
@@ -161,7 +161,7 @@
       font-weight: 700;
       border-radius: 10px;
       cursor: pointer;
-      margin-bottom: 16px;
+      margin-top: 6px;
     }
 
     .btn-add-group:hover {
@@ -180,6 +180,7 @@
       word-break: break-all;
       line-height: 1.6;
       margin-bottom: 14px;
+      min-height: 120px;
     }
 
     .btn-copy {
@@ -213,16 +214,16 @@
       <div class="grid-2 row">
         <div>
           <label>날짜 선택</label>
-          <input type="date" id="trainDate" onchange="updateAll()">
+          <input type="date" id="trainDate">
         </div>
         <div>
           <label>시작 시간</label>
-          <input type="time" id="trainTime" value="19:30" onchange="updateAll()">
+          <input type="time" id="trainTime" value="19:30">
         </div>
       </div>
       <div class="row">
         <label>훈련 장소</label>
-        <input type="text" id="trainPlace" placeholder="예: 종합운동장 트랙" oninput="updateAll()">
+        <input type="text" id="trainPlace" placeholder="예: 종합운동장 트랙">
       </div>
     </div>
 
@@ -234,100 +235,70 @@
 
       <div id="groupContainer"></div>
 
-      <button class="btn-add-group" onclick="addGroup()">➕ 조 추가하기 (C조, D조...)</button>
+      <button type="button" class="btn-add-group" onclick="addGroup()">➕ 조 추가하기 (C조, D조...)</button>
     </div>
 
     <!-- 3. 참가 인원 작성 -->
     <div class="card">
       <div class="card-title">👥 참가인원 목록</div>
-      <textarea id="attendees" rows="4" placeholder="1. &#10;2. &#10;3. &#10;(비워두면 카톡 공지 양식에 맞춰 기본 번호가 들어갑니다)" oninput="updateAll()"></textarea>
+      <textarea id="attendees" rows="4" placeholder="1. &#10;2. &#10;3. &#10;(비워두면 카톡 공지 양식에 맞춰 기본 번호가 들어갑니다)"></textarea>
     </div>
 
     <!-- 4. 미리보기 & 복사 -->
     <label>💬 카카오톡 공지 미리보기</label>
     <div class="preview-box" id="previewText"></div>
 
-    <button class="btn-copy" onclick="copyNotice()">💛 카카오톡 공지 복사하기</button>
+    <button type="button" class="btn-copy" onclick="copyNotice()">💛 카카오톡 공지 복사하기</button>
   </div>
 
   <script>
-    // 기본 조 데이터 (A조, B조)
-    let groups = [
+    var groups = [
       { id: 1, name: 'A조', runM: 400, runSec: 80, restM: 200, restSec: 70, sets: 20 },
       { id: 2, name: 'B조', runM: 400, runSec: 86, restM: 200, restSec: 70, sets: 20 }
     ];
 
-    // 오늘 날짜 세팅
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    document.getElementById('trainDate').value = `${yyyy}-${mm}-${dd}`;
-
-    /**
-     * 페이스 계산 함수:
-     * 질주 거리가 800m, 1000m 등으로 바뀌더라도
-     * 입력된 '질주(초)'는 400m 1바퀴 기준 랩타임이므로 무조건 400m 기준으로 1km 페이스를 환산합니다.
-     * (400m당 초수 * 2.5 = 1,000m당 초수)
-     */
     function calcPace(runSec) {
-      if (!runSec || runSec <= 0) return '';
-      
-      // 400m 초수를 1,000m 페이스로 환산 (초 * 2.5)
-      const secPerKm = Math.round(runSec * 2.5);
-      const m = Math.floor(secPerKm / 60);
-      const s = secPerKm % 60;
-      return `${m}${String(s).padStart(2, '0')}`;
+      var s = Number(runSec);
+      if (!s || s <= 0) return '';
+      var secPerKm = Math.round(s * 2.5);
+      var m = Math.floor(secPerKm / 60);
+      var rem = secPerKm % 60;
+      return '' + m + (rem < 10 ? '0' + rem : rem);
     }
 
-    // 그룹 UI 렌더링
     function renderGroups() {
-      const container = document.getElementById('groupContainer');
-      container.innerHTML = groups.map((g, idx) => {
-        const pace = calcPace(g.runSec);
-        return `
-          <div class="group-box">
-            <div class="group-header">
-              <input type="text" class="group-name-input" value="${g.name}" oninput="editGroup(${g.id}, 'name', this.value)">
-              <div>
-                <span class="pace-badge" id="badge-${g.id}">페이스: ${pace ? pace : '-'}</span>
-                ${groups.length > 1 ? `<button class="btn-del" onclick="delGroup(${g.id})">✕</button>` : ''}
-              </div>
-            </div>
+      var container = document.getElementById('groupContainer');
+      var html = '';
+      for (var i = 0; i < groups.length; i++) {
+        var g = groups[i];
+        var pace = calcPace(g.runSec);
+        var badgeText = pace ? '페이스: ' + pace : '페이스: -';
+        var delBtn = groups.length > 1 ? '<button type="button" class="btn-del" onclick="delGroup(' + g.id + ')">✕</button>' : '';
 
-            <div class="grid-4 row">
-              <div>
-                <label>질주(m)</label>
-                <input type="number" value="${g.runM}" step="50" oninput="editGroup(${g.id}, 'runM', Number(this.value))">
-              </div>
-              <div>
-                <label>질주(초)</label>
-                <input type="number" value="${g.runSec}" oninput="editGroup(${g.id}, 'runSec', Number(this.value))">
-              </div>
-              <div>
-                <label>회복(m)</label>
-                <input type="number" value="${g.restM}" step="50" oninput="editGroup(${g.id}, 'restM', Number(this.value))">
-              </div>
-              <div>
-                <label>회복(초)</label>
-                <input type="number" value="${g.restSec}" oninput="editGroup(${g.id}, 'restSec', Number(this.value))">
-              </div>
-            </div>
-
-            <div style="width: 120px;">
-              <label>세트수(회)</label>
-              <input type="number" value="${g.sets}" oninput="editGroup(${g.id}, 'sets', Number(this.value))">
-            </div>
-          </div>
-        `;
-      }).join('');
+        html += '<div class="group-box">' +
+          '<div class="group-header">' +
+            '<input type="text" class="group-name-input" value="' + g.name + '" oninput="editGroup(' + g.id + ', \'name\', this.value)">' +
+            '<div><span class="pace-badge" id="badge-' + g.id + '">' + badgeText + '</span>' + delBtn + '</div>' +
+          '</div>' +
+          '<div class="grid-4 row">' +
+            '<div><label>질주(m)</label><input type="number" value="' + g.runM + '" step="50" oninput="editGroup(' + g.id + ', \'runM\', this.value)"></div>' +
+            '<div><label>질주(초)</label><input type="number" value="' + g.runSec + '" oninput="editGroup(' + g.id + ', \'runSec\', this.value)"></div>' +
+            '<div><label>회복(m)</label><input type="number" value="' + g.restM + '" step="50" oninput="editGroup(' + g.id + ', \'restM\', this.value)"></div>' +
+            '<div><label>회복(초)</label><input type="number" value="' + g.restSec + '" oninput="editGroup(' + g.id + ', \'restSec\', this.value)"></div>' +
+          '</div>' +
+          '<div style="width: 120px;">' +
+            '<label>세트수(회)</label><input type="number" value="' + g.sets + '" oninput="editGroup(' + g.id + ', \'sets\', this.value)">' +
+          '</div>' +
+        '</div>';
+      }
+      container.innerHTML = html;
     }
 
     function addGroup() {
-      const nextChar = String.fromCharCode(65 + groups.length); // C, D, E...
+      var nextChar = String.fromCharCode(65 + groups.length);
       groups.push({
         id: Date.now(),
-        name: `${nextChar}조`,
+        name: nextChar + '조',
         runM: 400,
         runSec: 92,
         restM: 200,
@@ -335,86 +306,117 @@
         sets: 20
       });
       renderGroups();
-      updateAll();
+      updatePreview();
     }
 
     function delGroup(id) {
-      groups = groups.filter(g => g.id !== id);
+      var next = [];
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].id !== id) next.push(groups[i]);
+      }
+      groups = next;
       renderGroups();
-      updateAll();
+      updatePreview();
     }
 
     function editGroup(id, key, val) {
-      const g = groups.find(item => item.id === id);
-      if (g) {
-        g[key] = val;
-        const pace = calcPace(g.runSec);
-        const badge = document.getElementById(`badge-${id}`);
-        if (badge) badge.innerText = `페이스: ${pace ? pace : '-'}`;
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].id === id) {
+          groups[i][key] = (key === 'name') ? val : Number(val);
+          if (key === 'runSec') {
+            var badge = document.getElementById('badge-' + id);
+            var pace = calcPace(val);
+            if (badge) badge.innerText = pace ? '페이스: ' + pace : '페이스: -';
+          }
+          break;
+        }
       }
-      updateAll();
+      updatePreview();
     }
 
-    // 카톡 텍스트 조립
     function generateNotice() {
-      const dateVal = document.getElementById('trainDate').value;
-      const timeVal = document.getElementById('trainTime').value;
-      const placeVal = document.getElementById('trainPlace').value.trim() || ' ';
-      const attendeesVal = document.getElementById('attendees').value.trim();
+      var dateVal = document.getElementById('trainDate').value;
+      var timeVal = document.getElementById('trainTime').value;
+      var placeVal = document.getElementById('trainPlace').value.trim();
+      var attendeesVal = document.getElementById('attendees').value.trim();
 
-      // 날짜 포맷 (예: 10월 14일 (화) 19시 30분)
-      let dateString = '*월 **일 (화) **시*분';
+      var dateString = '*월 **일 (화) **시*분';
       if (dateVal) {
-        const d = new Date(dateVal + 'T' + (timeVal || '00:00'));
-        const days = ['일', '월', '화', '수', '목', '금', '토'];
-        const month = d.getMonth() + 1;
-        const day = d.getDate();
-        const dayName = days[d.getDay()];
+        var parts = dateVal.split('-');
+        if (parts.length === 3) {
+          var y = Number(parts[0]);
+          var m = Number(parts[1]);
+          var d = Number(parts[2]);
+          var dt = new Date(y, m - 1, d);
+          var days = ['일', '월', '화', '수', '목', '금', '토'];
+          var dayName = days[dt.getDay()];
 
-        if (timeVal) {
-          const [hour, min] = timeVal.split(':');
-          dateString = `${month}월 ${day}일 (${dayName}) ${parseInt(hour)}시 ${min}분`;
-        } else {
-          dateString = `${month}월 ${day}일 (${dayName})`;
+          if (timeVal) {
+            var tParts = timeVal.split(':');
+            var h = Number(tParts[0]);
+            var min = tParts[1];
+            dateString = m + '월 ' + d + '일 (' + dayName + ') ' + h + '시 ' + min + '분';
+          } else {
+            dateString = m + '월 ' + d + '일 (' + dayName + ')';
+          }
         }
       }
 
-      let text = `🎈일시- ${dateString}\n`;
-      text += `🎈장소- ${placeVal}\n`;
-      text += `🎈내용-\n`;
+      var text = '🎈일시- ' + dateString + '\n';
+      text += '🎈장소- ' + (placeVal ? placeVal : '') + '\n';
+      text += '🎈내용-\n';
 
-      // 조별 내용 생성
-      groups.forEach(g => {
-        const pace = calcPace(g.runSec);
-        const paceStr = pace ? `(${pace})` : '';
-        text += `💥${g.name}-${paceStr}\n`;
-        text += `${g.runM}/${g.restM}(${g.runSec}”/${g.restSec}”)x${g.sets}\n\n`;
-      });
+      for (var i = 0; i < groups.length; i++) {
+        var g = groups[i];
+        var pace = calcPace(g.runSec);
+        var paceStr = pace ? '(' + pace + ')' : '';
+        text += '💥' + g.name + '-' + paceStr + '\n';
+        text += g.runM + '/' + g.restM + '(' + g.runSec + '”/' + g.restSec + '”)x' + g.sets + '\n\n';
+      }
 
-      // 참가인원
-      text += `참가인원 :\n`;
+      text += '참가인원 :\n';
       if (attendeesVal) {
         text += attendeesVal;
       } else {
-        text += `1. \n2. \n3. `;
+        text += '1. \n2. \n3. ';
       }
 
       return text;
     }
 
-    function updateAll() {
-      document.getElementById('previewText').innerText = generateNotice();
+    function updatePreview() {
+      var preview = document.getElementById('previewText');
+      if (preview) {
+        preview.innerText = generateNotice();
+      }
     }
 
     function copyNotice() {
-      const text = generateNotice();
-      navigator.clipboard.writeText(text).then(() => {
+      var text = generateNotice();
+      navigator.clipboard.writeText(text).then(function() {
         alert('팀미르 훈련 공지가 복사되었습니다!\n단톡방에 바로 붙여넣기(Ctrl+V)하세요. 🔥');
-      }).catch(() => {
+      }).catch(function() {
         alert('복사 실패! 미리보기 내용을 직접 복사해 주세요.');
       });
     }
 
-    window.onload = function() {
+    // 날짜/시간/장소 이벤트 리스너 등록
+    document.getElementById('trainDate').addEventListener('change', updatePreview);
+    document.getElementById('trainTime').addEventListener('change', updatePreview);
+    document.getElementById('trainPlace').addEventListener('input', updatePreview);
+    document.getElementById('attendees').addEventListener('input', updatePreview);
+
+    // 오늘 날짜 세팅 및 최초 렌더링
+    (function init() {
+      var now = new Date();
+      var yyyy = now.getFullYear();
+      var mm = ('0' + (now.getMonth() + 1)).slice(-2);
+      var dd = ('0' + now.getDate()).slice(-2);
+      document.getElementById('trainDate').value = yyyy + '-' + mm + '-' + dd;
+
       renderGroups();
-      updateAll();
+      updatePreview();
+    })();
+  </script>
+</body>
+</html>
