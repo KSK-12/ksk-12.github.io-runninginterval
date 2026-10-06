@@ -205,7 +205,7 @@
 <body>
 
   <div class="container">
-    <h1>🏃‍♂️ 팀미르 훈련 공지</h1>
+    <h1>🏃‍♂️️ 팀미르 훈련 공지</h1>
     <div class="sub-title">트랙 질주/회복 초수를 입력하면 페이스가 자동 계산됩니다!</div>
 
     <!-- 1. 기본 정보 입력 -->
@@ -239,7 +239,7 @@
 
       <div id="groupContainer"></div>
 
-      <button type="button" class="btn-add-group" onclick="addGroup()">➕ 조 추가하기 (B조, C조...)</button>
+      <button type="button" class="btn-add-group" onclick="addGroup()">➕ 조 추가하기</button>
     </div>
 
     <!-- 3. 참가 인원 작성 -->
@@ -256,12 +256,13 @@
   </div>
 
   <script>
+    // 최초 기본은 S조
     var groups = [
-      { id: 1, name: 'A조', runM: 400, runSec: 80, restM: 200, restSec: 70, sets: 10 }
+      { id: 1, name: 'S조', runM: 400, runSec: 76, restM: 200, restSec: 70, sets: 10 }
     ];
 
     /**
-     * 페이스 환산 함수 (1km당 분/초 -> '320', '550' 등 문자열 반환)
+     * 페이스 환산 함수 (1km당 분/초 -> '310', '550' 등 문자열 반환)
      */
     function calcPace(meter, seconds) {
       var m = Number(meter);
@@ -327,16 +328,31 @@
       container.innerHTML = html;
     }
 
+    /**
+     * 조 추가 규칙:
+     * 첫 번째 조가 S조이므로, 그 다음부터는 순서대로 A, B, C, D, E... 조로 명명됩니다.
+     */
     function addGroup() {
-      var nextChar = String.fromCharCode(65 + groups.length);
-      // A조(첫 번째 조)의 현재 설정값(질주m, 회복m, 세트수)을 기본으로 이어받음
-      var baseGroup = groups[0] || { runM: 400, runSec: 80, restM: 200, restSec: 70, sets: 10 };
+      var nextName = '';
+      if (groups.length === 1 && groups[0].name.indexOf('S') !== -1) {
+        nextName = 'A조';
+      } else {
+        // 기존 조 이름 중 마지막 문자를 기준으로 다음 알파벳 할당 (예: A -> B, B -> C)
+        var orderList = ['S조', 'A조', 'B조', 'C조', 'D조', 'E조', 'F조', 'G조', 'H조'];
+        if (groups.length < orderList.length) {
+          nextName = orderList[groups.length];
+        } else {
+          nextName = String.fromCharCode(65 + groups.length - 1) + '조';
+        }
+      }
+
+      var baseGroup = groups[0] || { runM: 400, runSec: 78, restM: 200, restSec: 70, sets: 10 };
 
       groups.push({
         id: Date.now(),
-        name: nextChar + '조',
+        name: nextName,
         runM: baseGroup.runM,
-        runSec: Number(baseGroup.runSec) + 6,
+        runSec: Number(baseGroup.runSec) + 4, // 조가 내려갈수록 기본 4초 여유
         restM: baseGroup.restM,
         restSec: Number(baseGroup.restSec),
         sets: Number(baseGroup.sets)
