@@ -239,7 +239,7 @@
 
       <div id="groupContainer"></div>
 
-      <button type="button" class="btn-add-group" onclick="addGroup()">➕ 조 추가하기 (C조, D조...)</button>
+      <button type="button" class="btn-add-group" onclick="addGroup()">➕ 조 추가하기 (B조, C조...)</button>
     </div>
 
     <!-- 3. 참가 인원 작성 -->
@@ -257,7 +257,7 @@
 
   <script>
     var groups = [
-      { id: 1, name: 'A조', runM: 400, runSec: 80, restM: 200, restSec: 70, sets: 10 },
+      { id: 1, name: 'A조', runM: 400, runSec: 80, restM: 200, restSec: 70, sets: 10 }
     ];
 
     /**
@@ -329,14 +329,17 @@
 
     function addGroup() {
       var nextChar = String.fromCharCode(65 + groups.length);
+      // A조(첫 번째 조)의 현재 설정값(질주m, 회복m, 세트수)을 기본으로 이어받음
+      var baseGroup = groups[0] || { runM: 400, runSec: 80, restM: 200, restSec: 70, sets: 10 };
+
       groups.push({
         id: Date.now(),
         name: nextChar + '조',
-        runM: 400,
-        runSec: 92,
-        restM: 200,
-        restSec: 75,
-        sets: 20
+        runM: baseGroup.runM,
+        runSec: Number(baseGroup.runSec) + 6,
+        restM: baseGroup.restM,
+        restSec: Number(baseGroup.restSec),
+        sets: Number(baseGroup.sets)
       });
       renderGroups();
       updatePreview();
